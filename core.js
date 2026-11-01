@@ -1,9 +1,9 @@
 'use strict';
 // Functional core: pure functions only. No DOM, no storage, no clock reads.
 
-const CADENCES = ['daily', 'saturday', 'weekly', 'monthly', 'quarterly', 'yearly'];
+const CADENCES = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'];
 const TITLES = {
-  daily: 'Daily', saturday: 'Saturday', weekly: 'Weekly',
+  daily: 'Daily', weekly: 'Weekly',
   monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly',
 };
 
@@ -17,7 +17,6 @@ const mondayOf = (d) => addDays(d, -((d.getDay() + 6) % 7));
 function periodKey(cadence, d) {
   switch (cadence) {
     case 'daily': return ymd(d);
-    case 'saturday':
     case 'weekly': return ymd(mondayOf(d));
     case 'monthly': return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
     case 'quarterly': return `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`;
@@ -29,7 +28,6 @@ function periodKey(cadence, d) {
 function shiftPeriod(cadence, d, dir) {
   switch (cadence) {
     case 'daily': return addDays(d, dir);
-    case 'saturday':
     case 'weekly': return addDays(d, 7 * dir);
     case 'monthly': return new Date(d.getFullYear(), d.getMonth() + dir, 1);
     case 'quarterly': return new Date(d.getFullYear(), d.getMonth() + 3 * dir, 1);
@@ -42,7 +40,6 @@ function periodLabel(cadence, d) {
   const fmt = (date, opts) => date.toLocaleDateString(undefined, opts);
   switch (cadence) {
     case 'daily': return fmt(d, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-    case 'saturday': return 'Saturday ' + fmt(addDays(mondayOf(d), 5), { year: 'numeric', month: 'short', day: 'numeric' });
     case 'weekly': return 'Week of ' + fmt(mondayOf(d), { year: 'numeric', month: 'short', day: 'numeric' });
     case 'monthly': return fmt(d, { year: 'numeric', month: 'long' });
     case 'quarterly': return `Q${Math.floor(d.getMonth() / 3) + 1} ${d.getFullYear()}`;
@@ -103,6 +100,47 @@ function setRotation(state, people, startYmd) {
   return next;
 }
 
+// Weekly's "Log shared expenses" and "Pick 1 family activity" belong to the Saturday sync:
+// indent them under "Sync", after its existing sub-items, and add "Process review" at the end.
+function moveIntoSync(list) {
+  const MOVE = ['w9', 'w10'];
+  const at = list.findIndex((i) => i.id === 's1');
+  if (at < 0) return list;
+  const moving = list.filter((i) => MOVE.includes(i.id)).map((i) => ({ ...i, indent: true }));
+  const rest = list.filter((i) => !MOVE.includes(i.id));
+  if (!rest.some((i) => i.id === 'p1')) moving.push({ id: 'p1', text: 'Process review', indent: true });
+  let end = rest.findIndex((i) => i.id === 's1') + 1;
+  while (end < rest.length && rest[end].indent) end++;
+  return [...rest.slice(0, end), ...moving, ...rest.slice(end)];
+}
+
+// Default Weekly items the user removed: w5 "Recycling + compost", w12 "Sunday reset". Ids are positional.
+const DROPPED_WEEKLY = ['w5', 'w12'];
+
+// The Saturday tab was folded into Weekly. Move any stored Saturday list, ticks and notes across.
+function foldSaturday(state) {
+  if (!state.lists.saturday) return state;
+  const next = clone(state);
+  const have = new Set(next.lists.weekly.map((i) => i.id));
+  const noTime = (t) => t.replace(/^\d{1,2}:\d{2}\s+/, '');
+  next.lists.weekly.push(...next.lists.saturday.filter((i) => !have.has(i.id)).map((i) => ({ ...i, text: noTime(i.text) })));
+  delete next.lists.saturday;
+  next.lists.weekly = moveIntoSync(next.lists.weekly.filter((i) => !DROPPED_WEEKLY.includes(i.id)));
+  for (const k of Object.keys(next.checks)) {
+    if (!k.startsWith('saturday|')) continue;
+    const nk = 'weekly|' + k.slice(9);
+    next.checks[nk] = Object.assign({}, next.checks[k], next.checks[nk]);
+    delete next.checks[k];
+  }
+  for (const k of Object.keys(next.notes)) {
+    if (!k.startsWith('saturday|')) continue;
+    const nk = 'weekly|' + k.slice(9);
+    next.notes[nk] = [next.notes[nk], next.notes[k]].filter(Boolean).join('\n');
+    delete next.notes[k];
+  }
+  return next;
+}
+
 function makeItems(prefix, lines) {
   return lines.map((t, i) => ({ id: `${prefix}${i + 1}`, text: t.trim(), indent: t.startsWith('  ') }));
 }
@@ -120,18 +158,6 @@ function defaultLists() {
       'Add low items to shopping list',
       'Check calendar for tomorrow',
     ]),
-    saturday: makeItems('s', [
-      '8:00 Sync (15 min)',
-      '  pick meals',
-      '  check fridge/pantry',
-      '  check calendar',
-      '  social plans this week',
-      '  write down anything for later',
-      '8:30 Shop (early)',
-      '9:45 Put away groceries',
-      '10:15 Batch prep + label/freeze',
-      '12:30 Lunch + clean kitchen',
-    ]),
     weekly: makeItems('w', [
       'Laundry: wash, fold, put away',
       'Bathrooms',
@@ -144,8 +170,18 @@ function defaultLists() {
       'Log shared expenses',
       'Pick 1 family activity',
       "Child's social: who, when, who drives",
-      'Sunday reset (10 min): chores, money, issues',
-    ]),
+    ]).concat(makeItems('s', [
+      'Sync (15 min)',
+      '  pick meals',
+      '  check fridge/pantry',
+      '  check calendar',
+      '  social plans this week',
+      '  write down anything for later',
+      'Shop (early)',
+      'Put away groceries',
+      'Batch prep + label/freeze',
+      'Lunch + clean kitchen',
+    ])),
     monthly: makeItems('m', [
       'Pay rent / bills (confirm autopay)',
       'Settle shared expenses',
@@ -180,13 +216,15 @@ function defaultLists() {
       'Gutters, seasonal home tasks',
     ]),
   };
+  // Drop removed items by id (ids are positional, so they stay in the source array above).
+  lists.weekly = moveIntoSync(lists.weekly.filter((i) => !DROPPED_WEEKLY.includes(i.id)));
   lists.daily.find((i) => i.text === 'Call relatives').rotation = true;
   return lists;
 }
 
 const api = {
   CADENCES, TITLES, ymd, parseYmd, periodKey, shiftPeriod, periodLabel, storeKey,
-  whoOn, progress, toggleCheck, setNote, addItem, removeItem, setRotation, defaultLists,
+  whoOn, progress, toggleCheck, setNote, addItem, removeItem, setRotation, foldSaturday, defaultLists,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else globalThis.HouseholdCore = api;

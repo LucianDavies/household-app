@@ -47,6 +47,11 @@
         tx.objectStore(store).put(value, key);
         await finished(tx);
       },
+      async deleteMany(store, keys) {
+        const tx = db.transaction(store, 'readwrite');
+        for (const k of keys) tx.objectStore(store).delete(k);
+        await finished(tx);
+      },
       async putMany(store, entries) {
         const tx = db.transaction(store, 'readwrite');
         for (const [k, v] of Object.entries(entries)) tx.objectStore(store).put(v, k);

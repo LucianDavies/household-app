@@ -9,7 +9,6 @@ const d = (y, m, day) => new Date(y, m - 1, day);
 assert.equal(H.periodKey('daily', d(2026, 11, 1)), '2026-11-01');
 assert.equal(H.periodKey('weekly', d(2026, 11, 1)), '2026-10-26');
 assert.equal(H.periodKey('weekly', d(2026, 10, 26)), '2026-10-26');
-assert.equal(H.periodKey('saturday', d(2026, 10, 31)), '2026-10-26');
 assert.equal(H.periodKey('monthly', d(2026, 11, 1)), '2026-11');
 assert.equal(H.periodKey('quarterly', d(2026, 11, 1)), '2026-Q4');
 assert.equal(H.periodKey('quarterly', d(2026, 3, 31)), '2026-Q1');
@@ -21,6 +20,36 @@ assert.equal(H.periodKey('monthly', H.shiftPeriod('monthly', d(2026, 1, 31), 1))
 assert.equal(H.periodKey('monthly', H.shiftPeriod('monthly', d(2026, 1, 15), -1)), '2025-12');
 assert.equal(H.periodKey('quarterly', H.shiftPeriod('quarterly', d(2026, 11, 1), 1)), '2027-Q1');
 assert.equal(H.periodKey('weekly', H.shiftPeriod('weekly', d(2026, 11, 1), -1)), '2026-10-19');
+
+// folding the old Saturday tab into Weekly
+{
+  const st = {
+    lists: { weekly: [{ id: 'w1', text: 'Laundry' }, { id: 'w5', text: 'Recycling + compost' }, { id: 'w12', text: 'Sunday reset' }], saturday: [{ id: 's1', text: '8:30 Shop (early)' }] },
+    checks: { 'saturday|2026-10-26': { s1: true }, 'weekly|2026-10-26': { w1: true } },
+    notes: { 'saturday|2026-10-26': 'sat', 'weekly|2026-10-26': 'wk' },
+  };
+  const out = H.foldSaturday(st);
+  assert.deepEqual(out.lists.weekly.map((i) => i.id), ['w1', 's1', 'p1']);
+  assert.equal(out.lists.weekly[1].text, 'Shop (early)'); // times dropped
+  assert.equal(out.lists.saturday, undefined);
+  assert.deepEqual(out.checks, { 'weekly|2026-10-26': { s1: true, w1: true } });
+  assert.equal(out.notes['weekly|2026-10-26'], 'wk\nsat');
+  assert.equal(H.foldSaturday(out), out); // idempotent
+}
+{
+  const w = H.defaultLists().weekly;
+  const i = w.findIndex((x) => x.text === 'Sync (15 min)');
+  const sub = w.slice(i + 1, i + 9);
+  assert.deepEqual(sub.slice(-2).map((x) => x.text), ['Pick 1 family activity', 'Process review']);
+  assert.ok(sub.every((x) => x.indent));
+  assert.equal(w[i + 9].text, 'Shop (early)');
+  assert.equal(w.filter((x) => x.text === 'Log shared expenses').length, 1);
+}
+assert.ok(!H.defaultLists().weekly.some((x) => /Sunday reset/.test(x.text)));
+assert.ok(!H.defaultLists().weekly.some((x) => /Recycling/.test(x.text)));
+assert.ok(!('saturday' in H.defaultLists()));
+assert.ok(H.defaultLists().weekly.some((i) => i.id === 's1'));
+assert.ok(H.defaultLists().weekly.every((i) => !/^\d{1,2}:\d{2}/.test(i.text)));
 
 // call rotation
 const rot = { people: ['A', 'B', 'C'], start: '2026-11-01' };

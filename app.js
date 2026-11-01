@@ -7,7 +7,7 @@
 
   let db;
   let state;
-  let cadence = new Date().getDay() === 6 ? 'saturday' : 'daily';
+  let cadence = 'daily';
   let viewDate = new Date();
   let following = true; // true until the user navigates away from "now"
   let editing = false;
@@ -133,6 +133,24 @@
     if (!state.lists[c]) { state.lists[c] = defaults[c]; missing[c] = defaults[c]; }
   }
   if (Object.keys(missing).length) await db.putMany('lists', missing);
+
+  // Migrate: the Saturday tab was folded into Weekly.
+  if (state.lists.saturday) {
+    const before = state;
+    state = H.foldSaturday(before);
+    try {
+      await db.putMany('lists', { weekly: state.lists.weekly });
+      const moved = (obj) => Object.keys(obj).filter((k) => k.startsWith('saturday|'));
+      const rekey = (k) => 'weekly|' + k.slice(9);
+      await db.putMany('checks', Object.fromEntries(moved(before.checks).map((k) => [rekey(k), state.checks[rekey(k)]])));
+      await db.putMany('notes', Object.fromEntries(moved(before.notes).map((k) => [rekey(k), state.notes[rekey(k)]])));
+      await db.deleteMany('checks', moved(before.checks));
+      await db.deleteMany('notes', moved(before.notes));
+      await db.deleteMany('lists', ['saturday']);
+    } catch (e) {
+      error = 'Could not move the Saturday list into Weekly: ' + e.message;
+    }
+  }
 
   // Ask the browser not to evict our data under storage pressure.
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
