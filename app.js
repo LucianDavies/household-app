@@ -34,7 +34,11 @@
     }
   }
 
+  // Period keys sort chronologically, so >= means "this period or later".
+  const atPresent = () => H.periodKey(cadence, viewDate) >= H.periodKey(cadence, new Date());
+
   function shift(dir) {
+    if (dir > 0 && atPresent()) return;
     viewDate = H.shiftPeriod(cadence, viewDate, dir);
     following = false;
     render();
@@ -49,7 +53,6 @@
     const label = H.periodLabel(cadence, viewDate);
 
     const items = list.map((item) => {
-      const who = item.rotation ? H.whoOn(state.rotation, viewDate) : null;
       const id = `i-${item.id}`;
       return el('li', { class: item.indent ? 'item indent' : 'item' },
         el('input', {
@@ -60,9 +63,7 @@
             render();
           },
         }),
-        el('label', { for: id },
-          item.text,
-          item.rotation ? el('span', { class: 'who' }, who ? ` — ${who}` : ' — (set rotation)') : null),
+        el('label', { for: id }, item.text),
         editing ? el('button', {
           class: 'x', 'aria-label': `Remove ${item.text}`,
           onclick: () => {
@@ -103,7 +104,7 @@
       el('div', { class: 'period' },
         el('button', { onclick: () => shift(-1), 'aria-label': 'Previous' }, '‹'),
         el('div', { class: 'label' }, label, el('small', {}, `${done}/${total} done`)),
-        el('button', { onclick: () => shift(1), 'aria-label': 'Next' }, '›')),
+        el('button', { onclick: () => shift(1), 'aria-label': 'Next', disabled: atPresent() }, '›')),
       el('h1', { class: 'print-only' }, `${H.TITLES[cadence]} — ${label}`),
       el('ul', { class: 'items' }, items),
       addForm,
