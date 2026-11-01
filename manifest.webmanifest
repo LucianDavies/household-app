@@ -1,0 +1,9 @@
+{
+  "name": "Household",
+  "short_name": "Household",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fafcfb",
+  "theme_color": "#2f6f5e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
