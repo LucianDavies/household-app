@@ -62,7 +62,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 .dial-item svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
 @media (prefers-reduced-motion: no-preference) { .dial-item { animation: pop .14s ease-out backwards; } .dial-item:nth-child(2) { animation-delay: .04s; } .dial-item:nth-child(3) { animation-delay: .08s; } .dial-item:nth-child(4) { animation-delay: .12s; } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.9); } }
-.datebtn { min-width: 0; padding: 4px 8px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); text-decoration: underline dotted; text-underline-offset: 4px; }
+.datebtn { min-width: 0; padding: 4px 8px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); }
 .datebtn:disabled { opacity: 1; text-decoration: none; cursor: default; }
 .error { background: var(--err-bg); border: 1px solid var(--err-line); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
 .print-only { display: none; }
