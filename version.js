@@ -1,2 +1,2 @@
 // Stamped by stamp.sh from the git commit; shown in the footer.
-const APP_VERSION = 'dev';
+const APP_VERSION = 'b0898b0';
