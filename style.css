@@ -11,7 +11,11 @@ button { font: inherit; min-height: 44px; min-width: 44px; padding: 8px 14px; to
 button:active { background: var(--line); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-.tabs { display: flex; gap: 6px; overflow-x: auto; padding: max(4px, env(safe-area-inset-top)) 0 8px; margin-top: calc(-1 * max(12px, env(safe-area-inset-top))); position: sticky; top: 0; z-index: 1; background: var(--bg); scrollbar-width: none; }
+.top { position: sticky; top: 0; z-index: 1; margin-top: calc(-1 * max(12px, env(safe-area-inset-top))); padding-top: max(4px, env(safe-area-inset-top)); background: var(--bg); }
+.modes { display: flex; gap: 0; margin-bottom: 8px; border: 1px solid var(--accent); border-radius: 10px; overflow: hidden; }
+.mode { flex: 1; border: 0; border-radius: 0; background: transparent; color: var(--accent); font-weight: 600; }
+.mode.on { background: var(--accent); color: var(--on-accent); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 0 8px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tab { white-space: nowrap; flex: 1 0 auto; padding: 8px 4px; font-size: 14px; }
 .tab.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -67,7 +71,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 
 @media print {
   body { background: #fff; font: 12pt "Courier New", monospace; }
-  .sheet, .toast, .tabs, .period, .actions, .fab-wrap, .scrim, .add, .x, h2 + textarea:empty, .version { display: none; }
+  .sheet, .toast, .top, .period, .actions, .fab-wrap, .scrim, .add, .x, h2 + textarea:empty, .version { display: none; }
   .print-only { display: block; font-size: 14pt; margin: 0 0 12px; }
   main { max-width: none; padding: 0 0 0 0.75in; }
   .item { border: 0; padding: 3px 0; }
@@ -93,4 +97,3 @@ button:disabled { opacity: 0.35; cursor: default; }
 .version { margin-top: 24px; text-align: center; font-size: 12px; opacity: .6; }
 .version { user-select: all; }
 .add { margin: 10px 0; }
-.shop-title { margin: 14px 0 0; font-size: 18px; color: var(--fg); }
