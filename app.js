@@ -68,8 +68,7 @@
   }
 
   function dialItem(iconName, text, onclick) {
-    return el('button', { class: 'dial-item', role: 'menuitem', onclick },
-      el('span', { class: 'dial-label' }, text), el('span', { class: 'dial-icon' }, icon(iconName)));
+    return el('button', { class: 'dial-item', role: 'menuitem', onclick }, icon(iconName), text);
   }
 
   // Close the menu, put focus back on the button, then run an optional follow-up (e.g. open a sheet,

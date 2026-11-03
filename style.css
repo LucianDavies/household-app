@@ -51,12 +51,10 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 .fab:focus-visible::after, .dial-item:focus-visible::after, .fab:active::after, .dial-item:active::after { opacity: .1; }
 @media (hover: hover) { .fab:hover::after, .dial-item:hover::after { opacity: .08; } }
 .scrim { position: fixed; inset: 0; z-index: 3; background: rgba(0,0,0,.4); }
-.dial { position: fixed; right: var(--edge); bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 4; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 14px; }
-.dial-item { display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; min-height: 52px; }
-.dial-item:active { background: none; filter: brightness(.9); }
-.dial-label { padding: 8px 14px; border-radius: 10px; background: var(--card); color: var(--fg); font-size: 16px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-.dial-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
-.dial-icon svg { width: 26px; height: 26px; fill: currentColor; }
+.dial { position: fixed; right: var(--edge); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 4; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; }
+.dial-item { position: relative; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 16px; background: var(--fab-bg); color: var(--on-fab); box-shadow: var(--elev); font-size: 16px; font-weight: 600; white-space: nowrap; }
+.dial-item:active { background: var(--fab-bg); }
+.dial-item svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
 @media (prefers-reduced-motion: no-preference) { .dial-item { animation: pop .14s ease-out backwards; } .dial-item:nth-child(2) { animation-delay: .04s; } .dial-item:nth-child(3) { animation-delay: .08s; } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.9); } }
 .datebtn { min-width: 0; padding: 4px 8px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); text-decoration: underline dotted; text-underline-offset: 4px; }
