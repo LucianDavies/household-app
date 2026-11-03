@@ -49,6 +49,25 @@ assert.equal(H.whoOn({ people: [], start: null }, d(2026, 11, 1)), null);
 
 assert.ok(!H.defaultLists().yearly.some((i) => /Vehicle|Gutters/.test(i.text)));
 
+// shopping list: scratch pad; ticked items go once their week is over
+{
+  let st = { shopping: [] };
+  st = H.addShopping(st, 'a', '  Milk ');
+  st = H.addShopping(st, 'b', 'Eggs');
+  assert.equal(H.addShopping(st, 'c', '   '), st); // blank ignored
+  assert.deepEqual(st.shopping.map((i) => i.text), ['Milk', 'Eggs']);
+  const wk = H.periodKey('weekly', d(2026, 11, 3)); // 2026-11-02
+  const ticked = H.toggleShopping(st, 'a', wk);
+  assert.equal(ticked.shopping[0].done, wk);
+  assert.equal(st.shopping[0].done, null); // original untouched
+  assert.equal(H.toggleShopping(ticked, 'a', wk).shopping[0].done, null); // untick
+  assert.equal(H.pruneShopping(ticked, wk), ticked); // same week: kept
+  const later = H.pruneShopping(ticked, H.periodKey('weekly', d(2026, 11, 9)));
+  assert.deepEqual(later.shopping.map((i) => i.id), ['b']); // next week: ticked item gone, unticked stays
+  assert.equal(H.pruneShopping(st, '2099-01-01'), st); // nothing ticked: no change
+  assert.deepEqual(H.removeShopping(st, 'a').shopping.map((i) => i.id), ['b']);
+}
+
 // checking items: pure, and period-scoped
 let s = { lists: H.defaultLists(), checks: {}, notes: {}, rotation: { people: [], start: null } };
 const s2 = H.toggleCheck(s, 'daily', '2026-11-01', 'd1');

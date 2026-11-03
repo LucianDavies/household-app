@@ -98,7 +98,74 @@
   document.addEventListener('focusin', syncTyping);
   document.addEventListener('focusout', () => setTimeout(syncTyping));
 
+  function tabsNav() {
+    const go = (c) => { focusId = `tab-${c}`; cadence = c; editing = false; undo = null; menuOpen = false; render(); };
+    return el('nav', { class: 'tabs' }, [...H.CADENCES, 'shopping'].map((c) => el('button', {
+      class: c === cadence ? 'tab on' : 'tab', id: `tab-${c}`,
+      'aria-current': c === cadence ? 'page' : false,
+      onclick: () => go(c),
+    }, H.TITLES[c] || 'Shopping')));
+  }
+
+  // Shopping: a scratch pad. Ticked items stay (struck through) until the week ends.
+  function renderShopping() {
+    const pruned = H.pruneShopping(state, H.periodKey('weekly', new Date()));
+    if (pruned !== state) { state = pruned; save('meta', 'shopping', state.shopping); }
+    const items = state.shopping.map((it) => {
+      const id = `si-${it.id}`;
+      return el('li', { class: 'item' },
+        el('input', {
+          type: 'checkbox', id, checked: !!it.done,
+          onchange: () => {
+            focusId = id;
+            if (navigator.vibrate) navigator.vibrate(10);
+            state = H.toggleShopping(state, it.id, H.periodKey('weekly', new Date()));
+            save('meta', 'shopping', state.shopping);
+            render();
+          },
+        }),
+        el('label', { for: id }, it.text),
+        el('button', {
+          class: 'x', id: `sx-${it.id}`, 'aria-label': `Remove ${it.text}`,
+          onclick: () => {
+            const at = state.shopping.findIndex((i) => i.id === it.id);
+            const nb = state.shopping[at + 1] || state.shopping[at - 1];
+            focusId = nb ? `sx-${nb.id}` : 'shop-add';
+            state = H.removeShopping(state, it.id);
+            save('meta', 'shopping', state.shopping);
+            render();
+          },
+        }, '✕'));
+    });
+    const input = el('input', { type: 'text', id: 'shop-add', placeholder: 'Add to shopping list', 'aria-label': 'Add to shopping list', enterkeyhint: 'done' });
+    root.replaceChildren(...[
+      error ? el('div', { class: 'error', role: 'alert' }, error) : null,
+      tabsNav(),
+      el('h1', { class: 'print-only' }, 'Shopping'),
+      el('form', {
+        class: 'add',
+        onsubmit: (e) => {
+          e.preventDefault();
+          focusId = 'shop-add';
+          const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+          state = H.addShopping(state, id, input.value);
+          save('meta', 'shopping', state.shopping);
+          render();
+        },
+      }, input, el('button', { type: 'submit' }, 'Add')),
+      items.length ? el('ul', { class: 'items' }, items) : el('p', { class: 'hint' }, 'Nothing here yet. Add things above; ticked items clear out when the week ends.'),
+      el('footer', { class: 'version' }, `Version ${APP_VERSION}`),
+    ].filter(Boolean));
+    if (focusId) {
+      const f = document.getElementById(focusId);
+      if (f && !f.disabled) f.focus({ preventScroll: true });
+      focusId = null;
+    }
+    syncTyping();
+  }
+
   function render() {
+    if (cadence === 'shopping') return renderShopping();
     const key = H.periodKey(cadence, viewDate);
     const sk = H.storeKey(cadence, key);
     const list = state.lists[cadence];
@@ -165,11 +232,7 @@
     // replaceChildren() renders a null argument as the text "null", so drop empties.
     root.replaceChildren(...[
       error ? el('div', { class: 'error', role: 'alert' }, error) : null,
-      el('nav', { class: 'tabs' }, H.CADENCES.map((c) => el('button', {
-        class: c === cadence ? 'tab on' : 'tab', id: `tab-${c}`,
-        'aria-current': c === cadence ? 'page' : false,
-        onclick: () => { focusId = `tab-${c}`; cadence = c; editing = false; undo = null; render(); },
-      }, H.TITLES[c]))),
+      tabsNav(),
       el('div', { class: 'period' },
         el('button', { id: 'prev', onclick: () => { focusId = 'prev'; shift(-1); }, 'aria-label': 'Previous' }, '‹'),
         el('div', { class: 'label' },
@@ -312,7 +375,7 @@
     sx = e.target.closest('textarea, input[type=text], .tabs') ? null : t.clientX; sy = t.clientY;
   }, { passive: true });
   root.addEventListener('touchend', (e) => {
-    if (sx == null) return;
+    if (sx == null || cadence === 'shopping') return;
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     sx = null;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) shift(dx > 0 ? -1 : 1);

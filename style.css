@@ -92,3 +92,4 @@ button:disabled { opacity: 0.35; cursor: default; }
 
 .version { margin-top: 24px; text-align: center; font-size: 12px; opacity: .6; }
 .version { user-select: all; }
+.add { margin: 10px 0; }

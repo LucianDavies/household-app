@@ -147,6 +147,36 @@ function setMeals(state, names, startYmd) {
   return next;
 }
 
+// Shopping list: a scratch pad that never resets. Ticking an item records the week (the Monday's
+// key from periodKey("weekly", ...)) it was ticked in; once that week is over the item is dropped.
+function addShopping(state, id, text) {
+  const t = text.trim();
+  if (!t) return state;
+  const next = clone(state);
+  next.shopping.push({ id, text: t, done: null });
+  return next;
+}
+
+function toggleShopping(state, id, weekKey) {
+  const next = clone(state);
+  const it = next.shopping.find((i) => i.id === id);
+  if (it) it.done = it.done ? null : weekKey;
+  return next;
+}
+
+function removeShopping(state, id) {
+  const next = clone(state);
+  next.shopping = next.shopping.filter((i) => i.id !== id);
+  return next;
+}
+
+// Drop items ticked in an earlier week. Returns the same object when nothing is dropped.
+function pruneShopping(state, weekKey) {
+  const keep = state.shopping.filter((i) => !i.done || i.done >= weekKey);
+  if (keep.length === state.shopping.length) return state;
+  return { ...state, shopping: keep };
+}
+
 const item = (id, text, extra) => ({ id, text, indent: false, ...extra });
 const sub = (id, text) => item(id, text, { indent: true });
 
@@ -250,6 +280,10 @@ const api = {
   removeItem,
   setRotation,
   setMeals,
+  addShopping,
+  toggleShopping,
+  removeShopping,
+  pruneShopping,
   defaultLists,
 };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
