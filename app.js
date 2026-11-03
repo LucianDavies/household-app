@@ -192,6 +192,10 @@
           who ? el('span', { class: 'who' }, ` — ${who}`) : null),
         item.rotation && !who ? el('button', { class: 'setrot', onclick: () => openRotation('call') }, 'Set rotation') : null,
         item.meal && !who ? el('button', { class: 'setrot', onclick: () => openRotation('meal') }, 'Set meals') : null,
+        item.shopping ? el('button', {
+          class: 'setrot', 'aria-label': 'Open the shopping list',
+          onclick: () => { cadence = 'shopping'; editing = false; focusId = 'shop-add'; render(); },
+        }, `Shopping list (${state.shopping.filter((i) => !i.done).length})`) : null,
         editing ? el('button', {
           class: 'x', 'aria-label': `Remove ${item.text}`,
           id: `x-${item.id}`,

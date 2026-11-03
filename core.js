@@ -227,7 +227,7 @@ function defaultLists() {
       sub("w18", "Capoeira"),
       sub("w19", "Piano lessons"),
       sub("w20", "Process review"),
-      item("w21", "Shop (early)"),
+      item("w21", "Shop (early)", { shopping: true }), // button jumps to the Shopping tab
       item("w22", "Put away groceries"),
       item("w23", "Batch prep + label/freeze"),
     ],
