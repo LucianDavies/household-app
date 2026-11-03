@@ -5,7 +5,6 @@
 //   notes:  "cadence|period"   -> string
 //   meta:   "rotation"         -> {people: [...], start: "YYYY-MM-DD" | null}
 //           "meals"            -> {people: [meal names], start: "YYYY-MM-DD" | null}
-//           "applied"          -> [ids of one-time default edits already applied, e.g. "e1"]
 
 (function () {
   const NAME = 'household';
@@ -42,7 +41,7 @@
       async load() {
         const tx = db.transaction(STORES, 'readonly');
         const [lists, checks, notes, meta] = await Promise.all(STORES.map((s) => readAll(tx.objectStore(s))));
-        return { lists, checks, notes, rotation: meta.rotation || { people: [], start: null }, mealRot: meta.meals || { people: [], start: null }, applied: meta.applied || [] };
+        return { lists, checks, notes, rotation: meta.rotation || { people: [], start: null }, mealRot: meta.meals || { people: [], start: null } };
       },
       async clearAll() {
         const tx = db.transaction(STORES, 'readwrite');
