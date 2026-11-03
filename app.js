@@ -204,7 +204,7 @@
         item.shopping ? el('button', {
           class: 'setrot', 'aria-label': 'Open the shopping list',
           onclick: () => { view = 'shopping'; editing = false; focusId = 'shop-add'; render(); },
-        }, `Shopping list (${state.shopping.filter((i) => !i.done).length})`) : null,
+        }, state.shopping.length ? `Shopping list (${state.shopping.length})` : 'Shopping list') : null,
         editing ? el('button', {
           class: 'x', 'aria-label': `Remove ${item.text}`,
           id: `x-${item.id}`,

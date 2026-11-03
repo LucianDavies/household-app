@@ -198,7 +198,7 @@ function defaultLists() {
       item("d13", "Laundry: put away"),
       item("d14", "Trash if full"),
       item("d15", "Call relatives", { rotation: true }),
-      item("d16", "Add low items to shopping list"),
+      item("d16", "Add low items to shopping list", { shopping: true }),
       item("d17", "Check calendar for tomorrow"),
       item("d18", "Make the bed"),
       item("d19", "Make 3's bed"),
@@ -224,7 +224,7 @@ function defaultLists() {
       sub("w18", "Capoeira"),
       sub("w19", "Piano lessons"),
       sub("w20", "Process review"),
-      item("w21", "Shop (early)", { shopping: true }), // button jumps to the Shopping tab
+      item("w21", "Shop (early)", { shopping: true }), // button opens the Shopping view
       item("w22", "Put away groceries"),
       item("w23", "Batch prep + label/freeze"),
     ],
