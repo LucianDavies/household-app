@@ -178,7 +178,9 @@
     const key = H.periodKey(cadence, viewDate);
     const sk = H.storeKey(cadence, key);
     const list = state.lists[cadence];
-    const checks = state.checks[sk] || {};
+    // "Add low items to shopping list" ticks itself while the shopping list has anything on it.
+    const checks = { ...(state.checks[sk] || {}) };
+    for (const it of list) if (it.fromShopping) { if (state.shopping.length) checks[it.id] = true; else delete checks[it.id]; }
     const { done, total } = H.progress(list, checks);
     const label = H.periodLabel(cadence, viewDate);
 
@@ -188,7 +190,7 @@
       const parent = !item.indent && list[n + 1] && list[n + 1].indent;
       return el('li', { class: item.indent ? 'item indent' : parent ? 'item parent' : 'item' },
         el('input', {
-          type: 'checkbox', id, checked: !!checks[item.id],
+          type: 'checkbox', id, checked: !!checks[item.id], disabled: !!item.fromShopping,
           onchange: () => {
             focusId = id;
             if (navigator.vibrate) navigator.vibrate(10);
@@ -197,7 +199,7 @@
             render();
           },
         }),
-        el('label', { for: id }, item.text,
+        el('label', item.fromShopping ? { for: id, onclick: (e) => { e.preventDefault(); goView('shopping', 'shop-add'); } } : { for: id }, item.text,
           who ? el('span', { class: 'who' }, ` — ${who}`) : null),
         item.rotation && !who ? el('button', { class: 'setrot', onclick: () => openRotation('call') }, 'Set rotation') : null,
         item.meal && !who ? el('button', { class: 'setrot', onclick: () => openRotation('meal') }, 'Set meals') : null,

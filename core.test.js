@@ -36,7 +36,7 @@ assert.equal(H.periodKey('weekly', H.shiftPeriod('weekly', d(2026, 11, 1), -1)),
   assert.ok(dl.daily.find((x) => x.text === 'Call relatives').rotation);
   assert.equal(dl.monthly.length, 7);
   assert.ok(dl.weekly.find((x) => x.text === 'Shop (early)').shopping);
-  assert.ok(dl.daily.find((x) => x.text === 'Add low items to shopping list').shopping);
+  assert.ok(dl.daily.find((x) => x.text === 'Add low items to shopping list').fromShopping);
 }
 
 // call rotation

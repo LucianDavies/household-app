@@ -198,7 +198,7 @@ function defaultLists() {
       item("d13", "Laundry: put away"),
       item("d14", "Trash if full"),
       item("d15", "Call relatives", { rotation: true }),
-      item("d16", "Add low items to shopping list", { shopping: true }),
+      item("d16", "Add low items to shopping list", { shopping: true, fromShopping: true }),
       item("d17", "Check calendar for tomorrow"),
       item("d18", "Make the bed"),
       item("d19", "Make 3's bed"),
