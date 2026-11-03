@@ -32,7 +32,7 @@ assert.equal(H.periodKey('weekly', H.shiftPeriod('weekly', d(2026, 11, 1), -1)),
   assert.equal(w[i + 12].text, 'Shop (early)');
   assert.ok(!('saturday' in dl));
   assert.ok(dl.weekly.every((x) => !/^\d{1,2}:\d{2}/.test(x.text)));
-  assert.equal(dl.daily.filter((x) => /^Kita|^Laundry|^Kitchen/.test(x.text)).length, 11);
+  assert.equal(dl.daily.filter((x) => /^Kita|^Laundry|^Kitchen/.test(x.text)).length, 9);
   assert.ok(dl.daily.find((x) => x.text === 'Call relatives').rotation);
   assert.equal(dl.monthly.length, 7);
   assert.ok(dl.weekly.find((x) => x.text === 'Shop (early)').shopping);
@@ -75,8 +75,8 @@ const s2 = H.toggleCheck(s, 'daily', '2026-11-01', 'd1');
 assert.deepEqual(s.checks, {}); // original untouched
 assert.equal(s2.checks['daily|2026-11-01'].d1, true);
 assert.equal(H.toggleCheck(s2, 'daily', '2026-11-01', 'd1').checks['daily|2026-11-01'].d1, undefined);
-assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-01']), { done: 1, total: 22 });
-assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-02']), { done: 0, total: 22 }); // next day is fresh
+assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-01']), { done: 1, total: 21 });
+assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-02']), { done: 0, total: 21 }); // next day is fresh
 
 // list edits
 const s3 = H.addItem(s, 'weekly', 'u1', '  Water plants ');
