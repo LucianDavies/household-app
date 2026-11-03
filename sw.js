@@ -1,6 +1,6 @@
 'use strict';
 // Caches the app files so it loads with no internet. Bump CACHE when you change any file.
-const CACHE = 'household-focus-1ce1b7'; // stamped by stamp.sh from the git commit
+const CACHE = 'household-fab-14135a'; // stamped by stamp.sh from the git commit
 const FILES = ['./', 'index.html', 'core.js', 'db.js', 'app.js', 'style.css', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {

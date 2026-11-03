@@ -39,9 +39,24 @@ h2 { font-size: 15px; color: var(--muted); margin: 18px 0 6px; }
 textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--field-border); border-radius: 8px; resize: vertical; background: var(--card); color: var(--fg); scroll-margin-bottom: 40vh; }
 .actions { display: flex; gap: 8px; margin-top: 16px; }
 .actions button { flex: 1; }
-.actions.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; max-width: 640px; margin: 0 auto; gap: 6px; padding: 8px max(14px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); background: var(--bg); border-top: 1px solid var(--line); }
-.actions.nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 2px; font-size: 12px; line-height: 1.15; text-align: center; }
-.actions.nav svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
+
+/* Floating action button + speed dial */
+.fab-wrap { --edge: max(16px, calc((100vw - 640px) / 2 + 16px)); }
+.fab { position: fixed; right: var(--edge); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 4; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 14px rgba(0,0,0,.35); display: grid; place-items: center; }
+.fab:active { background: var(--accent); filter: brightness(.9); }
+.fab svg { width: 30px; height: 30px; fill: currentColor; transition: transform .2s; }
+.fab[aria-expanded=true] svg { transform: rotate(135deg); }
+.scrim { position: fixed; inset: 0; z-index: 3; background: rgba(0,0,0,.4); }
+.dial { position: fixed; right: var(--edge); bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 4; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 14px; }
+.dial-item { display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; min-height: 52px; }
+.dial-item:active { background: none; filter: brightness(.9); }
+.dial-label { padding: 8px 14px; border-radius: 10px; background: var(--card); color: var(--fg); font-size: 16px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.dial-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.dial-icon svg { width: 26px; height: 26px; fill: currentColor; }
+@media (prefers-reduced-motion: no-preference) { .dial-item { animation: pop .14s ease-out backwards; } .dial-item:nth-child(2) { animation-delay: .04s; } .dial-item:nth-child(3) { animation-delay: .08s; } }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.9); } }
+.datebtn { min-width: 0; padding: 4px 8px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); text-decoration: underline dotted; text-underline-offset: 4px; }
+.datebtn:disabled { opacity: 1; text-decoration: none; cursor: default; }
 .error { background: var(--err-bg); border: 1px solid var(--err-line); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
 .print-only { display: none; }
 .toast { position: fixed; left: 14px; right: 14px; bottom: calc(86px + env(safe-area-inset-bottom)); max-width: 612px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 14px; background: var(--fg); color: var(--bg); border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
@@ -49,7 +64,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 
 @media print {
   body { background: #fff; font: 12pt "Courier New", monospace; }
-  .sheet, .toast, .tabs, .period, .actions, .add, .x, h2 + textarea:empty { display: none; }
+  .sheet, .toast, .tabs, .period, .actions, .fab-wrap, .scrim, .add, .x, h2 + textarea:empty { display: none; }
   .print-only { display: block; font-size: 14pt; margin: 0 0 12px; }
   main { max-width: none; padding: 0 0 0 0.75in; }
   .item { border: 0; padding: 3px 0; }

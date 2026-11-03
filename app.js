@@ -15,6 +15,7 @@
   let undo = null; // { cadence, list, text } for the last removed item
   let undoTimer = null;
   let focusId = null;
+  let menuOpen = false; // the floating action menu
 
   function el(tag, attrs, ...kids) {
     const n = document.createElement(tag);
@@ -29,7 +30,7 @@
 
   // Material Design icons (24px paths), drawn inline so they work offline and follow the text colour.
   const ICONS = {
-    today: 'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z',
+    add: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
     edit: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
     done: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
     call: 'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z',
@@ -65,6 +66,19 @@
     following = false;
     render();
   }
+
+  function dialItem(iconName, text, onclick) {
+    return el('button', { class: 'dial-item', role: 'menuitem', onclick },
+      el('span', { class: 'dial-label' }, text), el('span', { class: 'dial-icon' }, icon(iconName)));
+  }
+
+  // Close the menu, put focus back on the button, then run an optional follow-up (e.g. open a sheet,
+  // which returns focus to the button when it closes).
+  function closeMenu(then) {
+    menuOpen = false; focusId = 'fab'; render();
+    if (then) then();
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen) closeMenu(); });
 
   function render() {
     const key = H.periodKey(cadence, viewDate);
@@ -140,7 +154,12 @@
       }, H.TITLES[c]))),
       el('div', { class: 'period' },
         el('button', { id: 'prev', onclick: () => { focusId = 'prev'; shift(-1); }, 'aria-label': 'Previous' }, '‹'),
-        el('div', { class: 'label' }, label,
+        el('div', { class: 'label' },
+          el('button', {
+            class: 'datebtn', id: 'datebtn', disabled: following && atPresent(),
+            'aria-label': following && atPresent() ? false : `${label}, go to today`,
+            onclick: () => { focusId = 'datebtn'; viewDate = new Date(); following = true; render(); },
+          }, label),
           el('small', {}, total && done === total ? 'All done ✓' : `${done}/${total} done`),
           el('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': total, 'aria-valuenow': done },
             el('span', { style: `width:${total ? Math.round((done / total) * 100) : 0}%` }))),
@@ -150,16 +169,22 @@
       addForm,
       el('h2', {}, 'Notes'),
       notes,
-      el('div', { class: 'actions nav' },
-        el('button', { class: 'today', id: 'today-btn', disabled: following && atPresent(), onclick: () => { focusId = 'today-btn'; viewDate = new Date(); following = true; render(); } }, icon('today'), 'Today'),
-        el('button', { id: 'edit-toggle', onclick: () => { focusId = 'edit-toggle'; editing = !editing; render(); } }, icon(editing ? 'done' : 'edit'), editing ? 'Done editing' : 'Edit list'),
-        el('button', { id: 'btn-call', onclick: () => openRotation('call') }, icon('call'), 'Call rotation'),
-        el('button', { id: 'btn-meal', onclick: () => openRotation('meal') }, icon('meal'), 'Meal rotation')),
+      menuOpen ? el('div', { class: 'scrim', onclick: () => closeMenu() }) : null,
+      el('div', { class: 'fab-wrap' },
+        menuOpen ? el('div', { class: 'dial', id: 'dial', role: 'menu' },
+          dialItem(editing ? 'done' : 'edit', editing ? 'Done editing' : 'Edit list', () => { editing = !editing; closeMenu(); }),
+          dialItem('call', 'Call rotation', () => { closeMenu(() => openRotation('call')); }),
+          dialItem('meal', 'Meal rotation', () => { closeMenu(() => openRotation('meal')); })) : null,
+        el('button', {
+          class: 'fab', id: 'fab', 'aria-label': menuOpen ? 'Close menu' : 'Actions',
+          'aria-expanded': menuOpen ? 'true' : 'false', 'aria-haspopup': 'menu', 'aria-controls': menuOpen ? 'dial' : false,
+          onclick: () => { menuOpen = !menuOpen; focusId = 'fab'; render(); },
+        }, icon('add'))),
       undo ? el('div', { class: 'toast', role: 'status' },
         el('span', {}, `Removed “${undo.text}”`),
         el('button', {
           onclick: () => {
-            focusId = editing ? 'add-item' : 'edit-toggle';
+            focusId = editing ? 'add-item' : 'fab';
             state = { ...state, lists: { ...state.lists, [undo.cadence]: undo.list } };
             save('lists', undo.cadence, undo.list);
             undo = null; clearTimeout(undoTimer); render();
@@ -244,7 +269,7 @@
               if (meal) { state = H.setMeals(state, clean, start); save('meta', 'meals', state.mealRot); }
               else { state = H.setRotation(state, clean, start); save('meta', 'rotation', state.rotation); }
               close();
-              focusId = meal ? 'btn-meal' : 'btn-call';
+              focusId = 'fab';
               render();
             },
           }, 'Save')),
