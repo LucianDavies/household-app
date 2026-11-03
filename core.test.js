@@ -56,12 +56,12 @@ assert.ok(!H.defaultLists().yearly.some((i) => /Vehicle|Gutters/.test(i.text)));
   st = H.addShopping(st, 'a', '  Milk ');
   st = H.addShopping(st, 'b', 'Eggs');
   assert.equal(H.addShopping(st, 'c', '   '), st); // blank ignored
-  assert.deepEqual(st.shopping.map((i) => i.text), ['Milk', 'Eggs']);
+  assert.deepEqual(st.shopping.map((i) => i.text), ['Eggs', 'Milk']);
   const wk = H.periodKey('weekly', d(2026, 11, 3)); // 2026-11-02
   const ticked = H.toggleShopping(st, 'a', wk);
-  assert.equal(ticked.shopping[0].done, wk);
-  assert.equal(st.shopping[0].done, null); // original untouched
-  assert.equal(H.toggleShopping(ticked, 'a', wk).shopping[0].done, null); // untick
+  assert.equal(ticked.shopping.find((i) => i.id === 'a').done, wk);
+  assert.equal(st.shopping.find((i) => i.id === 'a').done, null); // original untouched
+  assert.equal(H.toggleShopping(ticked, 'a', wk).shopping.find((i) => i.id === 'a').done, null); // untick
   assert.equal(H.pruneShopping(ticked, wk), ticked); // same week: kept
   const later = H.pruneShopping(ticked, H.periodKey('weekly', d(2026, 11, 9)));
   assert.deepEqual(later.shopping.map((i) => i.id), ['b']); // next week: ticked item gone, unticked stays

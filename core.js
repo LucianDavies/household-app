@@ -153,7 +153,7 @@ function addShopping(state, id, text) {
   const t = text.trim();
   if (!t) return state;
   const next = clone(state);
-  next.shopping.push({ id, text: t, done: null });
+  next.shopping.unshift({ id, text: t, done: null }); // newest on top
   return next;
 }
 

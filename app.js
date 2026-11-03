@@ -150,18 +150,19 @@
     root.replaceChildren(...[
       error ? el('div', { class: 'error', role: 'alert' }, error) : null,
       topNav(),
-      el('form', {
-        class: 'add',
-        onsubmit: (e) => {
-          e.preventDefault();
-          focusId = 'shop-add';
-          const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-          state = H.addShopping(state, id, input.value);
-          save('meta', 'shopping', state.shopping);
-          render();
-        },
-      }, input, el('button', { type: 'submit' }, 'Add')),
-      items.length ? el('ul', { class: 'items' }, items) : el('p', { class: 'hint' }, 'Nothing here yet. Add things above; ticked items clear out when the week ends.'),
+      el('div', { class: 'shop' },
+        items.length ? el('ul', { class: 'items' }, items) : el('p', { class: 'hint' }, 'Nothing here yet. Add things below; ticked items clear out when the week ends.'),
+        el('form', {
+          class: 'add',
+          onsubmit: (e) => {
+            e.preventDefault();
+            focusId = 'shop-add';
+            const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+            state = H.addShopping(state, id, input.value);
+            save('meta', 'shopping', state.shopping);
+            render();
+          },
+        }, input, el('button', { type: 'submit' }, 'Add'))),
       el('footer', { class: 'version' }, `Version ${APP_VERSION}`),
     ].filter(Boolean));
     if (focusId) {

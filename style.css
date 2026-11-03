@@ -97,3 +97,6 @@ button:disabled { opacity: 0.35; cursor: default; }
 .version { margin-top: 24px; text-align: center; font-size: 12px; opacity: .6; }
 .version { user-select: all; }
 .add { margin: 10px 0; }
+.shop { display: flex; flex-direction: column; min-height: calc(100dvh - 150px); }
+.shop .items, .shop .hint { flex: 1; }
+.shop .add { position: sticky; bottom: env(safe-area-inset-bottom); margin: 0; padding: 10px 0; background: var(--bg); }
