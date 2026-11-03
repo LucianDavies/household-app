@@ -56,7 +56,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 .dial-item { position: relative; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 16px; background: var(--fab-bg); color: var(--on-fab); box-shadow: var(--elev); font-size: 16px; font-weight: 600; white-space: nowrap; }
 .dial-item:active { background: var(--fab-bg); }
 .dial-item svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
-@media (prefers-reduced-motion: no-preference) { .dial-item { animation: pop .14s ease-out backwards; } .dial-item:nth-child(2) { animation-delay: .04s; } .dial-item:nth-child(3) { animation-delay: .08s; } }
+@media (prefers-reduced-motion: no-preference) { .dial-item { animation: pop .14s ease-out backwards; } .dial-item:nth-child(2) { animation-delay: .04s; } .dial-item:nth-child(3) { animation-delay: .08s; } .dial-item:nth-child(4) { animation-delay: .12s; } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.9); } }
 .datebtn { min-width: 0; padding: 4px 8px; border: 0; background: none; font: inherit; font-weight: 600; color: var(--fg); text-decoration: underline dotted; text-underline-offset: 4px; }
 .datebtn:disabled { opacity: 1; text-decoration: none; cursor: default; }
@@ -93,3 +93,4 @@ button:disabled { opacity: 0.35; cursor: default; }
 .version { margin-top: 24px; text-align: center; font-size: 12px; opacity: .6; }
 .version { user-select: all; }
 .add { margin: 10px 0; }
+.shop-title { margin: 14px 0 0; font-size: 18px; color: var(--fg); }

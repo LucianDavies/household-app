@@ -34,6 +34,7 @@
     edit: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
     done: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
     call: 'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z',
+    cart: 'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z',
     meal: 'M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z',
   };
   function icon(name) {
@@ -100,11 +101,11 @@
 
   function tabsNav() {
     const go = (c) => { focusId = `tab-${c}`; cadence = c; editing = false; undo = null; menuOpen = false; render(); };
-    return el('nav', { class: 'tabs' }, [...H.CADENCES, 'shopping'].map((c) => el('button', {
+    return el('nav', { class: 'tabs' }, H.CADENCES.map((c) => el('button', {
       class: c === cadence ? 'tab on' : 'tab', id: `tab-${c}`,
       'aria-current': c === cadence ? 'page' : false,
       onclick: () => go(c),
-    }, H.TITLES[c] || 'Shopping')));
+    }, H.TITLES[c])));
   }
 
   // Shopping: a scratch pad. Ticked items stay (struck through) until the week ends.
@@ -141,7 +142,7 @@
     root.replaceChildren(...[
       error ? el('div', { class: 'error', role: 'alert' }, error) : null,
       tabsNav(),
-      el('h1', { class: 'print-only' }, 'Shopping'),
+      el('h2', { class: 'shop-title' }, 'Shopping list'),
       el('form', {
         class: 'add',
         onsubmit: (e) => {
@@ -260,7 +261,8 @@
         menuOpen ? el('div', { class: 'dial', id: 'dial', role: 'menu' },
           dialItem(0, editing ? 'done' : 'edit', editing ? 'Done editing' : 'Edit list', () => { editing = !editing; closeMenu(); }),
           dialItem(1, 'call', 'Call rotation', () => { closeMenu(() => openRotation('call')); }),
-          dialItem(2, 'meal', 'Meal rotation', () => { closeMenu(() => openRotation('meal')); })) : null,
+          dialItem(2, 'meal', 'Meal rotation', () => { closeMenu(() => openRotation('meal')); }),
+          dialItem(3, 'cart', 'Shopping list', () => { menuOpen = false; cadence = 'shopping'; editing = false; focusId = 'shop-add'; render(); })) : null,
         el('button', {
           class: 'fab', id: 'fab', 'aria-label': menuOpen ? 'Close menu' : 'Actions',
           'aria-expanded': menuOpen ? 'true' : 'false', 'aria-haspopup': 'menu', 'aria-controls': menuOpen ? 'dial' : false,
