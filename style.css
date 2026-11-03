@@ -1,8 +1,9 @@
-:root { --fg: #1d2421; --muted: #5d6a64; --accent: #2f6f5e; --line: #d7dfdb; --bg: #fafcfb; --card: #fff; --err-bg: #fde8e8; --err-line: #e3a3a3; --del: #a33; --on-accent: #fff; --field-border: #7a8780; color-scheme: light dark; }
+:root { --fg: #1d2421; --muted: #5d6a64; --accent: #2f6f5e; --line: #d7dfdb; --bg: #fafcfb; --card: #fff; --err-bg: #fde8e8; --err-line: #e3a3a3; --del: #a33; --on-accent: #fff; --fab-bg: #c8ebdc; --on-fab: #0b3d30; --field-border: #7a8780; color-scheme: light dark; }
 @media (prefers-color-scheme: dark) {
-  :root { --fg: #e6ece9; --muted: #9fb0a8; --accent: #4fa58f; --line: #34413c; --bg: #121715; --card: #1b2420; --err-bg: #3a1f1f; --err-line: #7a3b3b; --del: #ff8a8a; --on-accent: #0b1411; --field-border: #66746e; }
+  :root { --fg: #e6ece9; --muted: #9fb0a8; --accent: #4fa58f; --line: #34413c; --bg: #121715; --card: #1b2420; --err-bg: #3a1f1f; --err-line: #7a3b3b; --del: #ff8a8a; --on-accent: #0b1411; --fab-bg: #1f5646; --on-fab: #bdeedb; --field-border: #66746e; }
 }
 * { box-sizing: border-box; }
+:root { --elev: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15); }
 html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: contain; }
 body { margin: 0; font: 17px/1.4 system-ui, sans-serif; color: var(--fg); background: var(--bg); -webkit-tap-highlight-color: transparent; }
 main { max-width: 640px; margin: 0 auto; padding: 12px max(14px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); padding-top: max(12px, env(safe-area-inset-top)); }
@@ -42,10 +43,13 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 
 /* Floating action button + speed dial */
 .fab-wrap { --edge: max(16px, calc((100vw - 640px) / 2 + 16px)); }
-.fab { position: fixed; right: var(--edge); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 4; width: 58px; height: 58px; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 14px rgba(0,0,0,.35); display: grid; place-items: center; }
-.fab:active { background: var(--accent); filter: brightness(.9); }
-.fab svg { width: 30px; height: 30px; fill: currentColor; transition: transform .2s; }
-.fab[aria-expanded=true] svg { transform: rotate(135deg); }
+.fab { position: fixed; right: var(--edge); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 4; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 16px; background: var(--fab-bg); color: var(--on-fab); box-shadow: var(--elev); display: grid; place-items: center; }
+.fab:active { background: var(--fab-bg); }
+.fab svg { width: 24px; height: 24px; fill: currentColor; }
+/* State layer: a currentColor overlay at 8% (hover) / 10% (focus, pressed), as in M3 */
+.fab::after, .dial-item::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.fab:focus-visible::after, .dial-item:focus-visible::after, .fab:active::after, .dial-item:active::after { opacity: .1; }
+@media (hover: hover) { .fab:hover::after, .dial-item:hover::after { opacity: .08; } }
 .scrim { position: fixed; inset: 0; z-index: 3; background: rgba(0,0,0,.4); }
 .dial { position: fixed; right: var(--edge); bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 4; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 14px; }
 .dial-item { display: flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; min-height: 52px; }
