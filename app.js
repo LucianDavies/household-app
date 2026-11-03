@@ -187,6 +187,7 @@
       addForm,
       el('h2', {}, 'Notes'),
       notes,
+      el('footer', { class: 'version' }, `Version ${APP_VERSION}`),
       menuOpen ? el('div', { class: 'scrim', onclick: () => closeMenu() }) : null,
       el('div', { class: 'fab-wrap' },
         menuOpen ? el('div', { class: 'dial', id: 'dial', role: 'menu' },

@@ -67,7 +67,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 
 @media print {
   body { background: #fff; font: 12pt "Courier New", monospace; }
-  .sheet, .toast, .tabs, .period, .actions, .fab-wrap, .scrim, .add, .x, h2 + textarea:empty { display: none; }
+  .sheet, .toast, .tabs, .period, .actions, .fab-wrap, .scrim, .add, .x, h2 + textarea:empty, .version { display: none; }
   .print-only { display: block; font-size: 14pt; margin: 0 0 12px; }
   main { max-width: none; padding: 0 0 0 0.75in; }
   .item { border: 0; padding: 3px 0; }
@@ -89,3 +89,6 @@ button.primary { background: var(--accent); border-color: var(--accent); color: 
 .sheet .actions { position: sticky; bottom: -16px; padding: 10px 0 0; background: var(--bg); }
 button:disabled { opacity: 0.35; cursor: default; }
 .setrot { min-height: 36px; padding: 4px 10px; font-size: 15px; color: var(--accent); }
+
+.version { margin-top: 24px; text-align: center; font-size: 12px; opacity: .6; }
+.version { user-select: all; }
