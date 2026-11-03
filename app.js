@@ -99,9 +99,10 @@
   document.addEventListener('focusin', syncTyping);
   document.addEventListener('focusout', () => setTimeout(syncTyping));
 
+  function goView(v, focus) { focusId = focus || `mode-${v}`; view = v; editing = false; undo = null; menuOpen = false; render(); }
+
   // Top of the page: Todos / Shopping switch, and (for Todos) the cadence tabs.
   function topNav() {
-    const goView = (v) => { focusId = `mode-${v}`; view = v; editing = false; undo = null; menuOpen = false; render(); };
     const modes = el('div', { class: 'modes' }, [['todos', 'Todos'], ['shopping', 'Shopping']].map(([v, text]) => el('button', {
       class: v === view ? 'mode on' : 'mode', id: `mode-${v}`,
       'aria-current': v === view ? 'page' : false,
@@ -379,17 +380,22 @@
     dlg.showModal();
   }
 
-  // Swipe left/right on the list to change period.
+  // Swipe left/right: Shopping sits to the right of Todos. In Todos, right goes to the previous period
+  // and left to the next one; when already at the present there is no next, so left opens Shopping.
+  // In Shopping, right returns to Todos.
   let sx = null, sy = null;
   root.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
     sx = e.target.closest('textarea, input[type=text], .tabs') ? null : t.clientX; sy = t.clientY;
   }, { passive: true });
   root.addEventListener('touchend', (e) => {
-    if (sx == null || view === 'shopping') return;
+    if (sx == null) return;
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     sx = null;
-    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) shift(dx > 0 ? -1 : 1);
+    if (!(Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2)) return;
+    if (view === 'shopping') { if (dx > 0) goView('todos'); }
+    else if (dx < 0 && atPresent()) goView('shopping');
+    else shift(dx > 0 ? -1 : 1);
   }, { passive: true });
 
   try {
