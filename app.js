@@ -67,8 +67,8 @@
     render();
   }
 
-  function dialItem(iconName, text, onclick) {
-    return el('button', { class: 'dial-item', role: 'menuitem', onclick }, icon(iconName), text);
+  function dialItem(n, iconName, text, onclick) {
+    return el('button', { class: 'dial-item', id: `dial-${n}`, role: 'menuitem', onclick }, icon(iconName), text);
   }
 
   // Close the menu, put focus back on the button, then run an optional follow-up (e.g. open a sheet,
@@ -77,7 +77,26 @@
     menuOpen = false; focusId = 'fab'; render();
     if (then) then();
   }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen) closeMenu(); });
+  // Menu keyboard support. The items stack upward from the button, so ArrowUp goes to the next one.
+  document.addEventListener('keydown', (e) => {
+    if (!menuOpen) return;
+    if (e.key === 'Escape' || e.key === 'Tab') {
+      if (e.key === 'Tab') e.preventDefault();
+      return closeMenu();
+    }
+    const items = [...document.querySelectorAll('.dial-item')];
+    const at = items.indexOf(document.activeElement);
+    const to = { ArrowUp: at + 1, ArrowDown: at - 1, Home: 0, End: items.length - 1 }[e.key];
+    if (to == null || !items.length) return;
+    e.preventDefault();
+    items[(to + items.length) % items.length].focus();
+  });
+
+  // Hide the button while a text field has focus, so it never covers the Add button or Notes.
+  const isTyping = (n) => !!(n && n.matches && n.matches('textarea, input[type=text]'));
+  const syncTyping = () => document.body.classList.toggle('typing', isTyping(document.activeElement));
+  document.addEventListener('focusin', syncTyping);
+  document.addEventListener('focusout', () => setTimeout(syncTyping));
 
   function render() {
     const key = H.periodKey(cadence, viewDate);
@@ -171,13 +190,13 @@
       menuOpen ? el('div', { class: 'scrim', onclick: () => closeMenu() }) : null,
       el('div', { class: 'fab-wrap' },
         menuOpen ? el('div', { class: 'dial', id: 'dial', role: 'menu' },
-          dialItem(editing ? 'done' : 'edit', editing ? 'Done editing' : 'Edit list', () => { editing = !editing; closeMenu(); }),
-          dialItem('call', 'Call rotation', () => { closeMenu(() => openRotation('call')); }),
-          dialItem('meal', 'Meal rotation', () => { closeMenu(() => openRotation('meal')); })) : null,
+          dialItem(0, editing ? 'done' : 'edit', editing ? 'Done editing' : 'Edit list', () => { editing = !editing; closeMenu(); }),
+          dialItem(1, 'call', 'Call rotation', () => { closeMenu(() => openRotation('call')); }),
+          dialItem(2, 'meal', 'Meal rotation', () => { closeMenu(() => openRotation('meal')); })) : null,
         el('button', {
           class: 'fab', id: 'fab', 'aria-label': menuOpen ? 'Close menu' : 'Actions',
           'aria-expanded': menuOpen ? 'true' : 'false', 'aria-haspopup': 'menu', 'aria-controls': menuOpen ? 'dial' : false,
-          onclick: () => { menuOpen = !menuOpen; focusId = 'fab'; render(); },
+          onclick: () => { menuOpen = !menuOpen; focusId = menuOpen ? 'dial-0' : 'fab'; render(); },
         }, icon(menuOpen ? 'close' : 'edit'))),
       undo ? el('div', { class: 'toast', role: 'status' },
         el('span', {}, `Removed “${undo.text}”`),
@@ -196,6 +215,7 @@
       if (f && !f.disabled) f.focus({ preventScroll: true });
       focusId = null;
     }
+    syncTyping();
   }
 
   // Settings overlay for a rotation ('call' = people, 'meal' = meal names). Edits a draft; Save writes it.

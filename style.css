@@ -50,6 +50,7 @@ textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1p
 .fab::after, .dial-item::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity .15s; pointer-events: none; }
 .fab:focus-visible::after, .dial-item:focus-visible::after, .fab:active::after, .dial-item:active::after { opacity: .1; }
 @media (hover: hover) { .fab:hover::after, .dial-item:hover::after { opacity: .08; } }
+.typing .fab-wrap, .typing .scrim { display: none; }
 .scrim { position: fixed; inset: 0; z-index: 3; background: rgba(0,0,0,.4); }
 .dial { position: fixed; right: var(--edge); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 4; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px; }
 .dial-item { position: relative; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 16px; background: var(--fab-bg); color: var(--on-fab); box-shadow: var(--elev); font-size: 16px; font-weight: 600; white-space: nowrap; }
