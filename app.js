@@ -95,7 +95,10 @@
         item.meal && !who ? el('button', { class: 'setrot', onclick: () => openRotation('meal') }, 'Set meals') : null,
         editing ? el('button', {
           class: 'x', 'aria-label': `Remove ${item.text}`,
+          id: `x-${item.id}`,
           onclick: () => {
+            const nb = list[n + 1] || list[n - 1];
+            focusId = nb ? `x-${nb.id}` : 'add-item';
             undo = { cadence, list: state.lists[cadence], text: item.text };
             clearTimeout(undoTimer);
             undoTimer = setTimeout(() => { undo = null; const t = document.querySelector('.toast'); if (t) t.remove(); }, 6000);
@@ -106,11 +109,12 @@
         }, '✕') : null);
     });
 
-    const addInput = el('input', { type: 'text', placeholder: 'New item', 'aria-label': 'New item' });
+    const addInput = el('input', { type: 'text', id: 'add-item', placeholder: 'New item', 'aria-label': 'New item' });
     const addForm = editing ? el('form', {
       class: 'add',
       onsubmit: (e) => {
         e.preventDefault();
+        focusId = 'add-item';
         const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
         state = H.addItem(state, cadence, id, addInput.value);
         save('lists', cadence, state.lists[cadence]);
@@ -130,31 +134,32 @@
     root.replaceChildren(...[
       error ? el('div', { class: 'error', role: 'alert' }, error) : null,
       el('nav', { class: 'tabs' }, H.CADENCES.map((c) => el('button', {
-        class: c === cadence ? 'tab on' : 'tab',
+        class: c === cadence ? 'tab on' : 'tab', id: `tab-${c}`,
         'aria-current': c === cadence ? 'page' : false,
-        onclick: () => { cadence = c; editing = false; undo = null; render(); },
+        onclick: () => { focusId = `tab-${c}`; cadence = c; editing = false; undo = null; render(); },
       }, H.TITLES[c]))),
       el('div', { class: 'period' },
-        el('button', { onclick: () => shift(-1), 'aria-label': 'Previous' }, '‹'),
+        el('button', { id: 'prev', onclick: () => { focusId = 'prev'; shift(-1); }, 'aria-label': 'Previous' }, '‹'),
         el('div', { class: 'label' }, label,
           el('small', {}, total && done === total ? 'All done ✓' : `${done}/${total} done`),
           el('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': total, 'aria-valuenow': done },
             el('span', { style: `width:${total ? Math.round((done / total) * 100) : 0}%` }))),
-        el('button', { onclick: () => shift(1), 'aria-label': 'Next', disabled: atPresent() }, '›')),
+        el('button', { id: 'next', onclick: () => { focusId = 'next'; shift(1); }, 'aria-label': 'Next', disabled: atPresent() }, '›')),
       el('h1', { class: 'print-only' }, `${H.TITLES[cadence]} — ${label}`),
       el('ul', { class: 'items' }, items),
       addForm,
       el('h2', {}, 'Notes'),
       notes,
       el('div', { class: 'actions nav' },
-        el('button', { class: 'today', disabled: following && atPresent(), onclick: () => { viewDate = new Date(); following = true; render(); } }, icon('today'), 'Today'),
-        el('button', { onclick: () => { editing = !editing; render(); } }, icon(editing ? 'done' : 'edit'), editing ? 'Done editing' : 'Edit list'),
-        el('button', { onclick: () => openRotation('call') }, icon('call'), 'Call rotation'),
-        el('button', { onclick: () => openRotation('meal') }, icon('meal'), 'Meal rotation')),
+        el('button', { class: 'today', id: 'today-btn', disabled: following && atPresent(), onclick: () => { focusId = 'today-btn'; viewDate = new Date(); following = true; render(); } }, icon('today'), 'Today'),
+        el('button', { id: 'edit-toggle', onclick: () => { focusId = 'edit-toggle'; editing = !editing; render(); } }, icon(editing ? 'done' : 'edit'), editing ? 'Done editing' : 'Edit list'),
+        el('button', { id: 'btn-call', onclick: () => openRotation('call') }, icon('call'), 'Call rotation'),
+        el('button', { id: 'btn-meal', onclick: () => openRotation('meal') }, icon('meal'), 'Meal rotation')),
       undo ? el('div', { class: 'toast', role: 'status' },
         el('span', {}, `Removed “${undo.text}”`),
         el('button', {
           onclick: () => {
+            focusId = editing ? 'add-item' : 'edit-toggle';
             state = { ...state, lists: { ...state.lists, [undo.cadence]: undo.list } };
             save('lists', undo.cadence, undo.list);
             undo = null; clearTimeout(undoTimer); render();
@@ -164,7 +169,7 @@
 
     if (focusId) {
       const f = document.getElementById(focusId);
-      if (f) f.focus({ preventScroll: true });
+      if (f && !f.disabled) f.focus({ preventScroll: true });
       focusId = null;
     }
   }
@@ -179,6 +184,7 @@
     let people = cur.people.slice();
     let start = cur.start || H.ymd(new Date());
     let problem = '';
+    let sf = null; // id to focus after the next draw()
     const dlg = el('dialog', { class: 'sheet', 'aria-labelledby': 'rot-title' });
     const close = () => { dlg.close(); dlg.remove(); };
     dlg.addEventListener('cancel', () => setTimeout(() => dlg.remove()));
@@ -197,13 +203,18 @@
         preview.push(el('li', {}, el('span', { class: 'when' }, i === 0 ? 'Today' : day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })),
           el('span', { class: 'who' }, who || '—')));
       }
-      const move = (i, d) => { [people[i], people[i + d]] = [people[i + d], people[i]]; draw(); };
+      const move = (i, d) => {
+        [people[i], people[i + d]] = [people[i + d], people[i]];
+        const j = i + d; // follow the moved row; use the other arrow if this one is now disabled
+        sf = d < 0 ? (j > 0 ? `rot-up-${j}` : `rot-dn-${j}`) : (j < people.length - 1 ? `rot-dn-${j}` : `rot-up-${j}`);
+        draw();
+      };
       const rows = people.map((name, i) => el('li', { class: 'person' },
-        el('input', { type: 'text', value: name, 'aria-label': `${T.one} ${i + 1}`, oninput: (e) => { people[i] = e.target.value; } }),
-        el('button', { 'aria-label': 'Move up', disabled: i === 0, onclick: () => move(i, -1) }, '↑'),
-        el('button', { 'aria-label': 'Move down', disabled: i === people.length - 1, onclick: () => move(i, 1) }, '↓'),
-        el('button', { class: 'x', 'aria-label': `Remove ${name || T.one.toLowerCase()}`, onclick: () => { people.splice(i, 1); draw(); } }, '✕')));
-      const addInput = el('input', { type: 'text', placeholder: T.add, 'aria-label': T.add, enterkeyhint: 'done' });
+        el('input', { type: 'text', id: `rot-in-${i}`, value: name, 'aria-label': `${T.one} ${i + 1}`, 'aria-invalid': problem && !name.trim() ? 'true' : false, oninput: (e) => { people[i] = e.target.value; } }),
+        el('button', { id: `rot-up-${i}`, 'aria-label': 'Move up', disabled: i === 0, onclick: () => move(i, -1) }, '↑'),
+        el('button', { id: `rot-dn-${i}`, 'aria-label': 'Move down', disabled: i === people.length - 1, onclick: () => move(i, 1) }, '↓'),
+        el('button', { id: `rot-rm-${i}`, class: 'x', 'aria-label': `Remove ${name || T.one.toLowerCase()}`, onclick: () => { people.splice(i, 1); sf = people.length ? `rot-rm-${Math.min(i, people.length - 1)}` : 'rot-add'; draw(); } }, '✕')));
+      const addInput = el('input', { type: 'text', id: 'rot-add', placeholder: T.add, 'aria-label': T.add, enterkeyhint: 'enter' });
       const add = () => {
         const v = addInput.value.trim();
         if (!v) return;
@@ -217,7 +228,7 @@
         el('ul', { class: 'people' }, rows),
         el('form', { class: 'add', onsubmit: (e) => { e.preventDefault(); add(); } }, addInput, el('button', { type: 'submit' }, 'Add')),
         el('label', { class: 'field' }, el('span', {}, `${names[0] || T.first} is ${meal ? 'on' : 'up on'}`),
-          el('input', { type: 'date', value: start, onchange: (e) => { start = e.target.value; draw(); } })),
+          el('input', { type: 'date', id: 'rot-date', value: start, onchange: (e) => { start = e.target.value; sf = 'rot-date'; draw(); } })),
         el('h2', {}, 'Next 7 days'),
         el('ul', { class: 'preview' }, preview),
         el('div', { class: 'actions' },
@@ -227,16 +238,22 @@
             onclick: () => {
               const pending = addInput.value.trim();
               if (pending) people.push(pending);
-              if (people.some((x) => !x.trim())) { problem = T.empty; return draw(); }
-              if (people.length && !start) { problem = 'Pick a start date.'; return draw(); }
+              if (people.some((x) => !x.trim())) { problem = T.empty; sf = `rot-in-${people.findIndex((x) => !x.trim())}`; return draw(); }
+              if (people.length && !start) { problem = 'Pick a start date.'; sf = 'rot-date'; return draw(); }
               const clean = people.map((x) => x.trim());
               if (meal) { state = H.setMeals(state, clean, start); save('meta', 'meals', state.mealRot); }
               else { state = H.setRotation(state, clean, start); save('meta', 'rotation', state.rotation); }
-              render();
               close();
+              focusId = meal ? 'btn-meal' : 'btn-call';
+              render();
             },
           }, 'Save')),
       ].filter(Boolean));
+      if (sf) {
+        const f = document.getElementById(sf);
+        if (f && !f.disabled) f.focus();
+        sf = null;
+      }
     }
     draw();
     document.body.append(dlg);
