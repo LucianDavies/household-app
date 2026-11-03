@@ -122,8 +122,8 @@ const s2 = H.toggleCheck(s, 'daily', '2026-11-01', 'd1');
 assert.deepEqual(s.checks, {}); // original untouched
 assert.equal(s2.checks['daily|2026-11-01'].d1, true);
 assert.equal(H.toggleCheck(s2, 'daily', '2026-11-01', 'd1').checks['daily|2026-11-01'].d1, undefined);
-assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-01']), { done: 1, total: 14 });
-assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-02']), { done: 0, total: 14 }); // next day is fresh
+assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-01']), { done: 1, total: 15 });
+assert.deepEqual(H.progress(s2.lists.daily, s2.checks['daily|2026-11-02']), { done: 0, total: 15 }); // next day is fresh
 
 // list edits
 const s3 = H.addItem(s, 'weekly', 'u1', '  Water plants ');
@@ -140,5 +140,20 @@ assert.deepEqual(H.setRotation(s, [], '2026-11-01').rotation, { people: [], star
 assert.ok(s.lists.daily.some((i) => i.rotation));
 assert.equal(H.CADENCES.every((c) => s.lists[c].length > 0), true);
 assert.equal(new Set(Object.values(s.lists).flat().map((i) => i.id)).size, Object.values(s.lists).flat().length); // ids unique
+
+// meal rotation: same shape as the call rotation, plus a one-time Daily "Dinner" item
+{
+  assert.equal(s.lists.daily.filter((i) => i.meal).length, 1);
+  const old = { ...s, lists: { ...s.lists, daily: s.lists.daily.filter((i) => i.id !== 'dn1') } };
+  const m = H.mealEdit(old, false);
+  assert.equal(m.lists.daily.length, old.lists.daily.length + 1);
+  assert.equal(H.mealEdit(old, true), old); // already applied
+  assert.equal(H.mealEdit(m, false), m); // idempotent
+  const r = H.setMeals(m, ['Lasagne', 'Curry', 'Soup'], '2026-11-01');
+  assert.equal(H.whoOn(r.mealRot, d(2026, 11, 1)), 'Lasagne');
+  assert.equal(H.whoOn(r.mealRot, d(2026, 11, 3)), 'Soup');
+  assert.equal(H.whoOn(r.mealRot, d(2026, 11, 4)), 'Lasagne');
+  assert.equal(H.setMeals(r, [], '2026-11-01').mealRot.start, null);
+}
 
 console.log('all core tests passed');

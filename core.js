@@ -100,6 +100,25 @@ function setRotation(state, people, startYmd) {
   return next;
 }
 
+// Same shape as the call rotation, but the "people" are meal names (set during weekend prep).
+function setMeals(state, names, startYmd) {
+  const next = clone(state);
+  next.mealRot = { people: names, start: names.length ? startYmd : null };
+  return next;
+}
+
+// One-time edit (applied flag "e4"): a Daily "Dinner" item that shows that day's meal.
+function mealEdit(state, seen) {
+  const list = state.lists.daily;
+  if (seen || !list || list.some((i) => i.id === 'dn1')) return state;
+  let at = list.findIndex((i) => i.id === 'd1b');
+  if (at < 0) at = list.findIndex((i) => i.id === 'd1');
+  const pos = at >= 0 ? at + 1 : list.length;
+  const next = clone(state);
+  next.lists.daily = [...list.slice(0, pos), { id: 'dn1', text: 'Dinner', indent: false, meal: true }, ...list.slice(pos)];
+  return next;
+}
+
 // Weekly's "Log shared expenses" and "Pick 1 family activity" belong to the Saturday sync:
 // indent them under "Sync", after its existing sub-items, and add "Process review" at the end.
 function moveIntoSync(list) {
@@ -327,13 +346,14 @@ function defaultLists() {
   Object.assign(lists, updateDefaults({ lists }).lists);
   Object.assign(lists, listEdits({ lists }, false).lists);
   Object.assign(lists, socialEdit({ lists }, false).lists);
+  Object.assign(lists, mealEdit({ lists }, false).lists);
   lists.daily.find((i) => i.text === 'Call relatives').rotation = true;
   return lists;
 }
 
 const api = {
   CADENCES, TITLES, ymd, parseYmd, periodKey, shiftPeriod, periodLabel, storeKey,
-  whoOn, progress, toggleCheck, setNote, addItem, removeItem, setRotation, foldSaturday, dropRemoved, updateDefaults, listEdits, socialEdit, defaultLists,
+  whoOn, progress, toggleCheck, setNote, addItem, removeItem, setRotation, setMeals, mealEdit, foldSaturday, dropRemoved, updateDefaults, listEdits, socialEdit, defaultLists,
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else globalThis.HouseholdCore = api;
